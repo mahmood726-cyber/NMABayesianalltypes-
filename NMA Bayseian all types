@@ -625,7 +625,24 @@ server <- function(input, output, session) {
       pairs(as.matrix(rv$mcmc_samples), pch=".")
       storeBasePlot()
     } else if (pt == "Posterior Predictive Check") {
-      plot.new(); text(0.5,0.5,"Not implemented.")
+      mat <- as.matrix(rv$mcmc_samples)
+      tn <- grep("^theta\\[", colnames(mat), value=TRUE)
+      dd <- rv$sample_data
+      if (length(tn) > 0 && "Effect" %in% names(dd)) {
+        fitted <- colMeans(mat[, tn, drop=FALSE])
+        n <- min(length(fitted), length(dd$Effect))
+        observed <- dd$Effect[seq_len(n)]
+        fitted <- fitted[seq_len(n)]
+        lim <- range(c(observed, fitted), na.rm=TRUE)
+        plot(observed, fitted, pch=19,
+             xlab="Observed effect",
+             ylab="Posterior mean fitted effect",
+             main="Posterior Predictive Check",
+             xlim=lim, ylim=lim)
+        abline(0, 1, col="red", lty=2)
+      } else {
+        plot.new(); text(0.5,0.5,"Posterior fitted effects unavailable for current model")
+      }
       storeBasePlot()
     } else if (pt == "Network Plot") {
       if (input$analysis_type=="Network Meta-Analysis" && !is.null(rv$network_graph)) {
